@@ -1,0 +1,19 @@
+{
+  "name": "classroom",
+  "version": "1.0.0",
+  "description": "my classroom management system",
+  "main": "server.js",
+  "scripts": {
+    "test": "test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/RainaWlk/classroom.git"
+  },
+  "author": "RainaWlk",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/RainaWlk/classroom/issues"
+  },
+  "homepage": "https://github.com/RainaWlk/classroom#readme"
+}
