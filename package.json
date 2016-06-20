@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/RainaWlk/classroom/issues"
   },
-  "homepage": "https://github.com/RainaWlk/classroom#readme"
+  "homepage": "https://github.com/RainaWlk/classroom#readme",
+  "dependencies": {
+    "express": "^4.14.0"
+  }
 }
