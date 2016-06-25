@@ -7,30 +7,8 @@ var LISTEN_PORT = 80;
 function startServer(){
 	var app = express();
 
-	var userAPI = express.Router();
-
-
-	/*userAPI.route('class/').get((req, res) => {
-		console.log("get class");
-		res.end("");
-	}).post((req, res) => {
-		console.log("post class");
-		res.end("");
-	}).delete((req, res) => {
-		console.log("delete class");
-	}).put((req, res) => {
-		console.log("put class");
-		res.end("");
-	});*/
-	userAPI.get('class/', (req, res) => {
-console.log("get class");
-	});
-
-
-		
-
-	app.use('/data', userAPI);
-
+	
+	
 	//web services
 	course.go(app);
 
