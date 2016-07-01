@@ -2,7 +2,7 @@ var path = require('path');
 var express = require('express');
 var course = require('./course.js');
 var connInfo = require('./connInfo.js');
-var LISTEN_PORT = 80;
+var LISTEN_PORT = 8080;
 
 function startServer(){
 	var app = express();

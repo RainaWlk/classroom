@@ -1,4 +1,11 @@
 
+//db schema
+var CourseSchema = {
+	"name": "String"
+}
+
+
+
 //definition
 class Course {
 
@@ -21,3 +28,4 @@ class Student {
 exports.Course = Course;
 exports.Student = Student;
 
+exports.CourseSchema = CourseSchema;
