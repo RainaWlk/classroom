@@ -2,6 +2,17 @@ var express = require('express');
 var connInfo = require('./connInfo.js');
 var data = require('./data.js');
 
+//CRUD
+function getData(){
+	
+}
+
+
+
+
+
+
+//routing
 function route_data(app){
 	var userAPI = express.Router();
 	
@@ -21,7 +32,4 @@ function route_data(app){
 	app.use('/data', userAPI);
 }
 
-
-
-
-exports.go = route_data;
+exports.start = route_data;

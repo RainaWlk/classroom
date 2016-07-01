@@ -6,17 +6,15 @@ var LISTEN_PORT = 80;
 
 function startServer(){
 	var app = express();
-
-	
 	
 	//web services
-	course.go(app);
+	course.start(app);
 
 	//static
 	app.use(express.static(path.join(__dirname, 'frontend')));
-	//app.use(function(req, res){
-	//	res.sendStatus(404);
-	//});
+	app.use(function(req, res){
+		res.sendStatus(404);
+	});
 
 	var server = app.listen(process.env.PORT || LISTEN_PORT, function(){
 		var host = server.address().address;
