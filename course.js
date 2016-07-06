@@ -11,12 +11,11 @@ var resultStatus = {
 
 var COURSE_TABLE = "course";
 
-
+// ============= read ================================
 function listClasses(res){
-	
 	//db
 	var result = new Promise((resolve, reject) => {
-		DB_api.read(COURSE_TABLE).then((data) => {
+		DB_api.scan(COURSE_TABLE).then((data) => {
 			res.send(data);
 			resolve("OK");
 		}).catch(() => {
@@ -28,16 +27,23 @@ function listClasses(res){
 
 function queryClass(para, res){
 	return new Promise((resolve, reject) => {
-		//Integrity check
-		if(para.name == 'undefined')
-		{
-			resolve("ERR_FORBIDDEN");
-			return;
+		var key = {};
+		if(typeof para.name != 'undefined'){
+			key["name"] = para.name;
 		}
-
+		if(typeof para.teacher != 'undefined'){
+			key["teacher"] = para.teacher;
+		}
+		if(key.length == 0)
+			reject();
 
 		//db
-		resolve("ERR_NOTFOUND");
+		DB_api.read(COURSE_TABLE, key).then((data) => {
+			res.send(data);
+			resolve("OK");
+		}).catch(() => {
+			resolve("ERR_NOTFOUND");
+		});
 	});
 }
 
@@ -45,7 +51,7 @@ function getClass(req, res){
 	var para = req.query;
 	
 	//Integrity check
-	if(para.action == 'undefined')
+	if(typeof para.action == 'undefined')
 	{
 		return resopnseStatusCode("ERR_FORBIDDEN", res);
 	}
@@ -69,15 +75,6 @@ function getClass(req, res){
 	result.then((status) => {
 		resopnseStatusCode(status, res);
 	});
-
-/*var data = {
-	"name": "BRD",
-	"teacher": "喵咪咪",
-	"students": []
-}
-
-DB_api.write(COURSE_TABLE, data);*/
-
 	return;
 }
 
@@ -88,16 +85,39 @@ function initCourse(){
 	});
 }
 
+
+// ============== write =========================
+function writeClass(req, res){
+	console.log(req.body);
+	var body = req.body;
+
+	//Integrity check
+	if((typeof body["name"] == 'undefined') || 
+		(typeof body["teacher"] == 'undefined'))
+	{
+		resopnseStatusCode("ERR_FORBIDDEN", res);
+		return;
+	}
+
+	var course = new Data.Course(body["name"], body["teacher"]);
+
+	DB_api.write(COURSE_TABLE, course).then(() => {
+		resopnseStatusCode("OK", res);
+	}).catch((err) => {
+		resopnseStatusCode("ERR_FORBIDDEN", res);
+	});
+
+	
+}
+
 //============= routing =====================
 function route_data(app){
 	var userAPI = express.Router();
 	
 	userAPI.route('/class').get((req, res) => {
-		console.log("get class");
 		getClass(req, res);
 	}).post((req, res) => {
-		console.log("post class");
-		res.end("");
+		writeClass(req, res);
 	}).delete((req, res) => {
 		console.log("delete class");
 	}).put((req, res) => {

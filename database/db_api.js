@@ -9,22 +9,29 @@ Schema format
 */
 
 function createTable(tableName, schema, pk){
-	var result = new Promise((resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		Aws.createTable(tableName, schema, pk).then(() => {
 			resolve();
 		}).catch(() => {
 			reject();
 		});
 	});
-	return result;
+}
+//table full scan
+function scan(tableName){
+	return new Promise((resolve, reject) => {
+		Aws.scanTable(tableName).then((data) => {
+			resolve(data);
+		}).catch(() => {
+			reject();
+		});
+	});
 }
 
-
-
-
-function read(tableName){
-	var result = new Promise((resolve, reject) => {
-		Aws.readTable(tableName).then((data) => {
+//read item by key
+function read(tableName, key){
+	return new Promise((resolve, reject) => {
+		Aws.readTable(tableName, key).then((data) => {
 			resolve(data);
 		}).catch(() => {
 			reject();
@@ -33,17 +40,17 @@ function read(tableName){
 }
 
 function write(tableName, data){
-	var result = new Promise((resolve, reject) => {
+	return new Promise((resolve, reject) => {
 		Aws.writeTable(tableName, data).then(() => {
 			resolve();
-		}).catch(() => {
+		}).catch((err) => {
 			reject();
 		});
 	});
 }
 
 
-
+exports.scan = scan;
 exports.read = read;
 exports.createTable = createTable;
 exports.write = write;

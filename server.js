@@ -1,11 +1,13 @@
 var path = require('path');
 var express = require('express');
+var bodyParser = require('body-parser');
 var course = require('./course.js');
 var connInfo = require('./connInfo.js');
 var LISTEN_PORT = 8080;
 
 function startServer(){
 	var app = express();
+	app.use(bodyParser.json()); // for parsing application/json
 	
 	//web services
 	course.start(app);

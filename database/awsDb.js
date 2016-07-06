@@ -35,13 +35,14 @@ function writeTable(tableName, data){
 	return result;
 }
 
-function readTable(tableName){
+function readTable(tableName, key){
 	var params = {
-		TableName: tableName
+		TableName: tableName,
+		Key: key
 	};
 
 	var result = new Promise((resolve, reject) => {
-		docClient.query(params, function(err, data) {
+		docClient.get(params, function(err, data) {
 			if (err) {
 				console.error("Unable to read item. Error JSON:", JSON.stringify(err, null, 2));
 				reject();
@@ -52,6 +53,44 @@ function readTable(tableName){
 		});
 	});
 	return result;
+}
+
+function scanTable(tableName){
+	var params = {
+		TableName: tableName
+		//ProjectionExpression: "#yr, title, info.rating"
+	};
+
+	return new Promise((resolve, reject) => {
+		var objList = [];
+		docClient.scan(params, onScan);
+
+		function onScan(err, data) {
+			if (err) {
+				console.error("Unable to scan the table. Error JSON:", JSON.stringify(err, null, 2));
+				reject();
+			} else {
+				// print all the items
+				console.log("Scan succeeded.");
+				
+				data.Items.forEach(function(obj) {
+					objList.push(obj);
+				});
+
+				// continue scanning if we have more items
+				if (typeof data.LastEvaluatedKey != "undefined") {
+					console.log("Scanning for more...");
+					params.ExclusiveStartKey = data.LastEvaluatedKey;
+					docClient.scan(params, onScan);
+				}
+				else
+				{
+					resolve(objList);
+				}
+			}
+		}
+
+	});
 }
 
 function createTable(tableName, schema, pk){
@@ -112,4 +151,5 @@ function createTable(tableName, schema, pk){
 
 exports.createTable = createTable;
 exports.readTable = readTable;
+exports.scanTable = scanTable;
 exports.writeTable = writeTable;
