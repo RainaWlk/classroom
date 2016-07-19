@@ -78,13 +78,6 @@ function getClass(req, res){
 	return;
 }
 
-//bug: need to check table existed
-function initCourse(){
-	DB_api.createTable(COURSE_TABLE, Data.CourseSchema, "name").then(() => {
-		console.log("create done");
-	});
-}
-
 
 // ============== write =========================
 function writeClass(req, res){
@@ -136,4 +129,3 @@ function resopnseStatusCode(result, res){
 
 
 exports.start = route_data;
-exports.init = initCourse;

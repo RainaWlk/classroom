@@ -9,6 +9,7 @@ Schema format
 */
 
 function createTable(tableName, schema, pk){
+	console.log("create table: "+tableName);
 	return new Promise((resolve, reject) => {
 		Aws.createTable(tableName, schema, pk).then(() => {
 			resolve();
@@ -49,8 +50,40 @@ function write(tableName, data){
 	});
 }
 
+function initTable(tableSchemas){
+	var tableList = [];
+
+	return new Promise((resolve, reject) => {
+		Aws.listTables().then((tablesInDB) => {
+			//console.log(tablesInDB);
+
+			for(var tableName in tableSchemas){
+				var found = false;
+				for(var dbI in tablesInDB){
+					if(tableName == tablesInDB[dbI]){
+						found = true;
+						break;
+					}
+				}
+
+				//if not found ==> create
+				if(found == false){
+					createTable(tableName, tableSchemas[tableName], Object.keys(tableSchemas[tableName])[0]);
+				}
+			}
+
+			//bug: must wait all createTable done
+			resolve();
+		}).catch((err) => {
+			reject();
+		});
+	});
+}
+
 
 exports.scan = scan;
 exports.read = read;
 exports.createTable = createTable;
 exports.write = write;
+
+exports.initTable = initTable;

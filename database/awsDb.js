@@ -149,7 +149,25 @@ function createTable(tableName, schema, pk){
 	return result;
 }
 
+function listTables(){
+	return new Promise((resolve, reject) => {
+		dynamodb.listTables({}, function(err, data) {
+			if (err)
+			{
+				console.log(err, err.stack); // an error occurred
+				reject();
+			}
+			else
+			{
+				resolve(data.TableNames);
+			}
+		});
+	});
+
+}
+
 exports.createTable = createTable;
 exports.readTable = readTable;
 exports.scanTable = scanTable;
 exports.writeTable = writeTable;
+exports.listTables = listTables;

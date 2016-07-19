@@ -1,7 +1,9 @@
 var path = require('path');
 var express = require('express');
 var bodyParser = require('body-parser');
+var Data = require('./data.js');
 var course = require('./course.js');
+var students = require('./students.js');
 var connInfo = require('./connInfo.js');
 var LISTEN_PORT = 8080;
 
@@ -9,8 +11,15 @@ function startServer(){
 	var app = express();
 	app.use(bodyParser.json()); // for parsing application/json
 	
-	//web services
-	course.start(app);
+	//init
+	Data.init().then(() => {
+		//web services
+		course.start(app);
+		students.start(app);
+	}).catch(() => {
+		//quit
+
+	});
 
 	//static
 	app.use(express.static(path.join(__dirname, 'frontend')));
