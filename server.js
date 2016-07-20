@@ -23,9 +23,10 @@ function startServer(){
 
 	//static
 	app.use(express.static(path.join(__dirname, 'frontend')));
-	app.use(function(req, res){
+	/*app.use(function(req, res){
+		console.log("404");
 		res.sendStatus(404);
-	});
+	});*/
 
 	var server = app.listen(process.env.PORT || LISTEN_PORT, function(){
 		var host = server.address().address;

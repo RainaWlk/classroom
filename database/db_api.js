@@ -32,7 +32,7 @@ function scan(tableName){
 //read item by key
 function read(tableName, key){
 	return new Promise((resolve, reject) => {
-		Aws.readTable(tableName, key).then((data) => {
+		Aws.readData(tableName, key).then((data) => {
 			resolve(data);
 		}).catch(() => {
 			reject();
@@ -42,7 +42,17 @@ function read(tableName, key){
 
 function write(tableName, data){
 	return new Promise((resolve, reject) => {
-		Aws.writeTable(tableName, data).then(() => {
+		Aws.writeData(tableName, data).then(() => {
+			resolve();
+		}).catch((err) => {
+			reject();
+		});
+	});
+}
+
+function deleteData(tableName, data){
+	return new Promise((resolve, reject) => {
+		Aws.deleteData(tableName, data).then(() => {
 			resolve();
 		}).catch((err) => {
 			reject();
@@ -85,5 +95,5 @@ exports.scan = scan;
 exports.read = read;
 exports.createTable = createTable;
 exports.write = write;
-
+exports.delete = deleteData;
 exports.initTable = initTable;

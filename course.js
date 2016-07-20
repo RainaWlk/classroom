@@ -9,13 +9,13 @@ var resultStatus = {
 	"OK": 200
 };
 
-var COURSE_TABLE = "course";
+var TABLE_NAME = "course";
 
 // ============= read ================================
 function listClasses(res){
 	//db
 	var result = new Promise((resolve, reject) => {
-		DB_api.scan(COURSE_TABLE).then((data) => {
+		DB_api.scan(TABLE_NAME).then((data) => {
 			res.send(data);
 			resolve("OK");
 		}).catch(() => {
@@ -38,7 +38,7 @@ function queryClass(para, res){
 			reject();
 
 		//db
-		DB_api.read(COURSE_TABLE, key).then((data) => {
+		DB_api.read(TABLE_NAME, key).then((data) => {
 			res.send(data);
 			resolve("OK");
 		}).catch(() => {
@@ -107,7 +107,7 @@ function writeClass(req, res){
 function route_data(app){
 	var userAPI = express.Router();
 	
-	userAPI.route('/class').get((req, res) => {
+	userAPI.route('/').get((req, res) => {
 		getClass(req, res);
 	}).post((req, res) => {
 		writeClass(req, res);
@@ -118,7 +118,7 @@ function route_data(app){
 		res.end("");
 	});
 
-	app.use('/data', userAPI);
+	app.use('/data/class', userAPI);
 }
 
 function resopnseStatusCode(result, res){

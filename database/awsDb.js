@@ -15,7 +15,7 @@ var TypeTranslation = {
 	"Bool": "B"
 }
 
-function writeTable(tableName, data){
+function writeData(tableName, data){
 	var params = {
         TableName: tableName,
         Item: data
@@ -35,7 +35,7 @@ function writeTable(tableName, data){
 	return result;
 }
 
-function readTable(tableName, key){
+function readData(tableName, key){
 	var params = {
 		TableName: tableName,
 		Key: key
@@ -48,6 +48,26 @@ function readTable(tableName, key){
 				reject();
 			} else {
 				console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
+				resolve(data);
+			}
+		});
+	});
+	return result;
+}
+
+function deleteData(tableName, key){
+	var params = {
+		TableName: tableName,
+		Key: key
+	};
+
+	var result = new Promise((resolve, reject) => {
+		docClient.delete(params, function(err, data) {
+			if (err) {
+				console.error("Unable to delete item. Error JSON:", JSON.stringify(err, null, 2));
+				reject();
+			} else {
+				console.log("DeleteItem succeeded:", JSON.stringify(data, null, 2));
 				resolve(data);
 			}
 		});
@@ -167,7 +187,8 @@ function listTables(){
 }
 
 exports.createTable = createTable;
-exports.readTable = readTable;
 exports.scanTable = scanTable;
-exports.writeTable = writeTable;
+exports.readData = readData;
+exports.writeData = writeData;
+exports.deleteData = deleteData;
 exports.listTables = listTables;
