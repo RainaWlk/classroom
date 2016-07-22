@@ -12,20 +12,19 @@ var resultStatus = {
 var TABLE_NAME = "course";
 
 // ============= read ================================
-function listClasses(res){
+function listClasses(){
 	//db
 	var result = new Promise((resolve, reject) => {
 		DB_api.scan(TABLE_NAME).then((data) => {
-			res.send(data);
-			resolve("OK");
+			resolve(data["Item"]);
 		}).catch(() => {
-			resolve("ERR_NOTFOUND");
+			reject("ERR_NOTFOUND");
 		});
 	});
 	return result;
 }
 
-function queryClass(para, res){
+function queryClass(para){
 	return new Promise((resolve, reject) => {
 		var key = {};
 		if(typeof para.name != 'undefined'){
@@ -39,43 +38,44 @@ function queryClass(para, res){
 
 		//db
 		DB_api.read(TABLE_NAME, key).then((data) => {
-			res.send(data);
-			resolve("OK");
+			resolve(data["Item"]);
 		}).catch(() => {
-			resolve("ERR_NOTFOUND");
+			reject("ERR_NOTFOUND");
 		});
 	});
 }
 
-function getClass(req, res){
-	var para = req.query;
-	
-	//Integrity check
-	if(typeof para.action == 'undefined')
-	{
-		return resopnseStatusCode("ERR_FORBIDDEN", res);
-	}
-	
-	//route
-	var result = null;
-	switch(para.action){
-		case "list":
-			result = listClasses(res);
-			break;
-		case "query":
-			result = queryClass(para, res);
-			break;
-		default:
-			result = new Promise((resolve, reject) => {
-				resolve("ERR_FORBIDDEN");
-			});
-			break;
-	}
+function getClass(para, res){
+	return new Promise((resolve, reject) => {
+		//Integrity check
+		if(typeof para.action == 'undefined')
+		{
+			return reject("ERR_FORBIDDEN");
+		}
+		
+		//route
+		var result = null;
+		switch(para.action){
+			case "list":
+				result = listClasses();
+				break;
+			case "query":
+				result = queryClass(para);
+				break;
+			default:
+				reject("ERR_FORBIDDEN");
+				/*result = new Promise((resolve, reject) => {
+					resolve("ERR_FORBIDDEN");
+				});*/
+				break;
+		}
 
-	result.then((status) => {
-		resopnseStatusCode(status, res);
+		result.then((data) => {
+			resolve(data);
+		}).catch((err) => {
+			reject(err);
+		});
 	});
-	return;
 }
 
 
@@ -108,7 +108,7 @@ function route_data(app){
 	var userAPI = express.Router();
 	
 	userAPI.route('/').get((req, res) => {
-		getClass(req, res);
+		apiResponse(getClass(req.query), res);
 	}).post((req, res) => {
 		writeClass(req, res);
 	}).delete((req, res) => {
@@ -121,6 +121,22 @@ function route_data(app){
 	app.use('/data/class', userAPI);
 }
 
+function apiResponse(promiseResult, res){
+
+	promiseResult.then((data) => {
+		if(typeof data == 'object'){
+			res.send(JSON.stringify(data));
+		}
+		else if(typeof data == 'string'){
+			res.send(data);
+		}
+		res.end();
+	}).catch((err) => {
+		res.sendStatus(resultStatus[err]);
+		res.end();
+	});
+}
+
 function resopnseStatusCode(result, res){
 	console.log(resultStatus[result]);
 	res.sendStatus(resultStatus[result]);
@@ -129,3 +145,4 @@ function resopnseStatusCode(result, res){
 
 
 exports.start = route_data;
+exports.getCourse = queryClass;
