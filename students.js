@@ -4,13 +4,13 @@ var Data = require('./data.js');
 var course = require('./course.js');
 var DB_api = require('./database/db_api.js');
 
-var resultStatus = {
+const resultStatus = {
 	"ERR_FORBIDDEN":401,
 	"ERR_NOTFOUND": 404,
 	"OK": 200
 };
 
-var TABLE_NAME = "students";
+const TABLE_NAME = "students";
 
 // ============= read ================================
 function getData(para){
@@ -120,44 +120,84 @@ function deleteData(body){
 }
 
 function attendCourse(body){
+	console.log(body);
 	return new Promise((resolve, reject) => {
-		var studentData = null;
-		//var courseData = null;
-
 		//find student obj
 		var getKey = {
 			"name": body["name"]
 		};
-		getData(getKey).then((data) => {
-			console.log(data);
-			studentData = data;
+		var result1 = getData(getKey);
 
-			var courseKey = {
-				"name": body["courseName"]
+		//find course obj
+		var courseKey = {
+			"name": body["courseName"]
+		}
+		var result2 = course.getCourse(courseKey);
+
+		Promise.all([result1, result2]).then(dataArray => {
+			var studentData = dataArray[0];
+			var courseData = dataArray[1];
+			var index = null;
+
+			var searchExisted = function(obj, key){
+				var found = null;
+
+				for(let i in obj){
+					if( obj[i]["name"] == key){
+						found = i;
+						break;
+					}
+				}
+				return found;
+			};
+
+			//write into db
+			var studentObj = Data.makeObj(Data.Student, studentData);
+			var index = searchExisted(studentObj["course"], courseData["name"]);
+			if(index >= 0){	//existed
+				if(typeof body["suspend"] == 'string'){
+					studentObj["course"][index]["suspend"] = Data.toBOOL(body["suspend"]);
+				}
 			}
-			return course.getCourse(courseKey);
-		}).then((courseData) => {
+			else{
+				var newAttendtion = {
+					"name": courseData["name"],
+					"absentData": [],
+					"suspend": false
+				};
 
-			var student = new Data.Student(studentData["name"]);
-			student["course"].push({
-				"name": courseData["name"],
-				"absentData": [],
-				"suspend": false
-			});
+				if(typeof body["suspend"] == 'string'){
+					newAttendtion["suspend"] = Data.toBOOL(body["suspend"]);
+				}
+
+				studentObj["course"].push(newAttendtion);
+			}
 
 			//write to student table
-			DB_api.write(TABLE_NAME, student).then(() => {
-				resolve();
-			}).catch((err) => {
-				reject("ERR_FORBIDDEN");
-			});
+			var wResult1 = DB_api.write(TABLE_NAME, studentObj);
 
 			//write to course table
+			var courseObj = Data.makeObj(Data.Course, courseData);
+			if(searchExisted(courseObj["students"], studentData["name"]) == null){	//ignore if existed
+				var newStudent = {
+					"name": studentData["name"]
+				}
+				courseObj["students"].push(newStudent);
+			}
 
-		}).catch(() => {
+			var wResult2 = DB_api.write(course.tableName, courseObj);
+
+			Promise.all([wResult1, wResult2]).then(() => {
+				resolve();
+			}, err => {
+				//bug: restore db?
+				reject("ERR_FORBIDDEN");
+			});
+		}, err => {
 			console.log("attendCourse catch");
 			reject("ERR_NOTFOUND");
 		});
+
 	});
 }
 
@@ -174,16 +214,13 @@ function route_data(app){
 		apiResponse(deleteData(req.body), res);
 	});
 
-	userAPI.route('/course').get((req, res) => {
-		console.log("get student course");
-	}).post((req, res) => {
+	userAPI.route('/course').post((req, res) => {
 		apiResponse(attendCourse(req.body), res);
 	}).delete((req, res) => {
 		console.log("delete student course");
 		
 	}).put((req, res) => {
-		console.log("put class");
-		res.end("");
+		apiResponse(attendCourse(req.body), res);
 	});
 
 

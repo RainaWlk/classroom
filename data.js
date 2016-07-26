@@ -18,7 +18,7 @@ class Course {
 		this.name = name;	//p.k.
 		this.teacher = teacher;
 		this.dates = [];
-		this.weekly = "";
+		this.weekly = "none";
 		this.students = [];
 	}
 }
@@ -31,6 +31,39 @@ class Student {
 	}
 }
 
+function makeObj(destClass, source){
+	var dest = new destClass();
+
+	if(typeof source != 'object'){
+		return null;
+	}
+
+	var copyFunc = function(dObj, sObj){
+		for(let i in dObj){
+			for(let j in sObj){
+				if(j == i){
+					if(typeof dObj[i] == 'object'){
+						if(Array.isArray(dObj[i])){
+							dObj[i] = sObj[i].slice(0);
+						}
+						else
+						{
+							dObj[i] = copyFunc(dObj[i], sObj[j]);						
+						}
+					}
+
+					else
+					{
+						dObj[i] = sObj[j];
+					}
+					break;
+				}
+			}
+		}
+		return dObj;
+	}
+	return copyFunc(dest, source);
+}
 
 function initData(){
 
@@ -46,7 +79,37 @@ function initData(){
 
 
 
+//utils
+function toBOOL(val)
+{
+	if (val==null) return false;
+	switch (typeof val)
+	{
+		case 'boolean':
+			return val;
+		case 'string':
+			var result = false;
+			switch(val.toLowerCase())
+			{
+				case "true":
+				case "1":
+				case "on":
+				case "enable":
+				case "enabled":
+					result = true;
+					break;
+			}
+			return result;
+		case 'number':
+			return (val == 1) ? true:false;
+	}
+	return false;
+}
+
 exports.Course = Course;
 exports.Student = Student;
-
+exports.makeObj = makeObj;
 exports.init = initData;
+
+//utils
+exports.toBOOL = toBOOL;

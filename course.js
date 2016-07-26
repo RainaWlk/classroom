@@ -3,13 +3,13 @@ var connInfo = require('./connInfo.js');
 var Data = require('./data.js');
 var DB_api = require('./database/db_api.js');
 
-var resultStatus = {
+const resultStatus = {
 	"ERR_FORBIDDEN":401,
 	"ERR_NOTFOUND": 404,
 	"OK": 200
 };
 
-var TABLE_NAME = "course";
+const TABLE_NAME = "course";
 
 // ============= read ================================
 function listClasses(){
@@ -64,9 +64,6 @@ function getClass(para, res){
 				break;
 			default:
 				reject("ERR_FORBIDDEN");
-				/*result = new Promise((resolve, reject) => {
-					resolve("ERR_FORBIDDEN");
-				});*/
 				break;
 		}
 
@@ -93,6 +90,9 @@ function writeClass(req, res){
 	}
 
 	var course = new Data.Course(body["name"], body["teacher"]);
+	if(typeof body["weekly"] == 'string'){
+		course.weekly = body["weekly"];
+	}
 
 	DB_api.write(COURSE_TABLE, course).then(() => {
 		resopnseStatusCode("OK", res);
@@ -115,7 +115,7 @@ function route_data(app){
 		console.log("delete class");
 	}).put((req, res) => {
 		console.log("put class");
-		res.end("");
+		writeClass(req, res);
 	});
 
 	app.use('/data/class', userAPI);
@@ -146,3 +146,5 @@ function resopnseStatusCode(result, res){
 
 exports.start = route_data;
 exports.getCourse = queryClass;
+
+exports.tableName = TABLE_NAME;
