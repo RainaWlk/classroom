@@ -106,6 +106,25 @@ function toBOOL(val)
 	return false;
 }
 
+function isEmpty(obj){
+
+	if((obj == null) || 
+		(obj.length === 0)){
+		return true;
+	}
+
+	if(obj.length > 0)
+		return false;
+
+	for(let i in obj){
+		if(obj.hasOwnProperty(i)){
+			return false;
+		}
+	}
+
+	return true;
+}
+
 exports.Course = Course;
 exports.Student = Student;
 exports.makeObj = makeObj;
@@ -113,3 +132,4 @@ exports.init = initData;
 
 //utils
 exports.toBOOL = toBOOL;
+exports.isEmpty = isEmpty;

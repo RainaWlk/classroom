@@ -48,7 +48,7 @@ function readData(tableName, key){
 				reject();
 			} else {
 				console.log("GetItem succeeded:", JSON.stringify(data, null, 2));
-				resolve(data);
+				resolve(data["Item"]);
 			}
 		});
 	});

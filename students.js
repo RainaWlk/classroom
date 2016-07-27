@@ -21,17 +21,17 @@ function getData(para){
 			return reject("ERR_NOTFOUND");
 		}
 
-		var key = {
+		let key = {
 			"name": para["name"]
 		};
 
 		//db
 		DB_api.read(TABLE_NAME, key).then((data) => {
-			if(typeof data["Item"] == 'undefined'){
+			if(Data.isEmpty(data)){
 				reject("ERR_NOTFOUND");
 			}
 			else{
-				resolve(data["Item"]);
+				resolve(data);
 			}
 		}).catch(() => {
 			reject("ERR_NOTFOUND");
@@ -49,7 +49,7 @@ function writeData(body){
 			return reject("ERR_FORBIDDEN");
 		}
 
-		var student = new Data.Student(body["name"]);
+		let student = new Data.Student(body["name"]);
 
 		DB_api.write(TABLE_NAME, student).then(() => {
 			resolve();
@@ -82,7 +82,7 @@ function deleteData(body){
 		}
 		
 		//empty check
-		var getKey = {
+		let getKey = {
 			"name": body["name"]
 		};
 		getData(getKey).then((data) => {
@@ -203,8 +203,7 @@ function attendCourse(body){
 
 //============= routing =====================
 function route_data(app){
-	var userAPI = express.Router();
-	var result = null;
+	let userAPI = express.Router();
 
 	userAPI.route('/').get((req, res) => {
 		apiResponse(getData(req.query), res);
@@ -222,7 +221,6 @@ function route_data(app){
 	}).put((req, res) => {
 		apiResponse(attendCourse(req.body), res);
 	});
-
 
 	app.use('/data/student', userAPI);
 }
