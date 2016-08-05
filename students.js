@@ -201,6 +201,88 @@ function attendCourse(body){
 	});
 }
 
+function leaveCourse(body){
+	console.log(body);
+	return new Promise((resolve, reject) => {
+		//find student obj
+		var getKey = {
+			"name": body["name"]
+		};
+		var result1 = getData(getKey);
+
+		//find course obj
+		var courseKey = {
+			"name": body["courseName"]
+		}
+		var result2 = course.getCourse(courseKey);
+
+		Promise.all([result1, result2]).then(dataArray => {
+			var studentData = dataArray[0];
+			var courseData = dataArray[1];
+			var index = null;
+
+			var searchExisted = function(obj, key){
+				var found = null;
+
+				for(let i in obj){
+					if( obj[i]["name"] == key){
+						found = i;
+						break;
+					}
+				}
+				return found;
+			};
+
+			//write into db
+			var studentObj = Data.makeObj(Data.Student, studentData);
+			var index = searchExisted(studentObj["course"], courseData["name"]);
+			if(index >= 0){	//existed
+				if(typeof body["suspend"] == 'string'){
+					studentObj["course"][index]["suspend"] = Data.toBOOL(body["suspend"]);
+				}
+			}
+			else{
+				var newAttendtion = {
+					"name": courseData["name"],
+					"absentData": [],
+					"suspend": false
+				};
+
+				if(typeof body["suspend"] == 'string'){
+					newAttendtion["suspend"] = Data.toBOOL(body["suspend"]);
+				}
+
+				studentObj["course"].push(newAttendtion);
+			}
+
+			//write to student table
+			var wResult1 = DB_api.write(TABLE_NAME, studentObj);
+
+			//write to course table
+			var courseObj = Data.makeObj(Data.Course, courseData);
+			if(searchExisted(courseObj["students"], studentData["name"]) == null){	//ignore if existed
+				var newStudent = {
+					"name": studentData["name"]
+				}
+				courseObj["students"].push(newStudent);
+			}
+
+			var wResult2 = DB_api.write(course.tableName, courseObj);
+
+			Promise.all([wResult1, wResult2]).then(() => {
+				resolve();
+			}, err => {
+				//bug: restore db?
+				reject("ERR_FORBIDDEN");
+			});
+		}, err => {
+			console.log("attendCourse catch");
+			reject("ERR_NOTFOUND");
+		});
+
+	});
+}
+
 //============= routing =====================
 function route_data(app){
 	let userAPI = express.Router();
