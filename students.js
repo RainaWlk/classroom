@@ -201,8 +201,9 @@ function attendCourse(body){
 	});
 }
 
+//bug: this is a temp function
 function leaveCourse(body){
-	console.log(body);
+/*	console.log(body);
 	return new Promise((resolve, reject) => {
 		//find student obj
 		var getKey = {
@@ -280,17 +281,16 @@ function leaveCourse(body){
 			reject("ERR_NOTFOUND");
 		});
 
-	});
+	});*/
 }
 
 function addAbsentee(body){
-	console.log(body);
-		
 	return new Promise((resolve, reject) => {
 		//check
-		if(typeof body["date"] != 'string'){
+		if(typeof body["absentDate"] != 'string'){
 			return reject("ERR_FORBIDDEN");
 		}
+		var absentDate = body["absentDate"];
 		
 		//find student obj
 		var getKey = {
@@ -327,22 +327,98 @@ function addAbsentee(body){
 			if(index == null){
 				return reject("ERR_NOTFOUND");
 			}
-			var dateArray = studentObj["course"][index]["date"];
-			if(dateArray.indexOf(body["date"]) >= 0){
+			var dateArray = studentObj["course"][index]["absentDate"];
+			if(typeof dateArray == 'undefined'){
+				studentObj["course"][index]["absentDate"] = [absentDate];
+			}
+			else if(dateArray.indexOf(absentDate) >= 0){
 				return resolve();
 			}
 			else{
-				dateArray.push(body["date"]);
+				dateArray.push(absentDate);
 			}
 
 			//write to student table
 			DB_api.write(TABLE_NAME, studentObj).then(() => {
 				resolve();
 			}).catch(err => {
+				console.log("absent write error");
 				reject("ERR_FORBIDDEN");
 			});
 		}, err => {
 			console.log("addAbsentee catch");
+			reject("ERR_NOTFOUND");
+		});
+
+	});
+}
+
+function cancelAbsentee(body){
+	return new Promise((resolve, reject) => {
+		//check
+		if(typeof body["absentDate"] != 'string'){
+			return reject("ERR_FORBIDDEN");
+		}
+		var absentDate = body["absentDate"];
+		
+		//find student obj
+		var getKey = {
+			"name": body["name"]
+		};
+		var result1 = getData(getKey);
+
+		//find course obj
+		var courseKey = {
+			"name": body["courseName"]
+		}
+		var result2 = course.getCourse(courseKey);
+
+		Promise.all([result1, result2]).then(dataArray => {
+			var studentData = dataArray[0];
+			var courseData = dataArray[1];
+			var index = null;
+
+			var searchExisted = function(obj, key){
+				var found = null;
+
+				for(let i in obj){
+					if( obj[i]["name"] == key){
+						found = i;
+						break;
+					}
+				}
+				return found;
+			};
+
+			//check student has attended the course
+			var studentObj = Data.makeObj(Data.Student, studentData);
+			var index = searchExisted(studentObj["course"], courseData["name"]);
+			if(index == null){
+				return reject("ERR_NOTFOUND");
+			}
+
+
+			var dateArray = studentObj["course"][index]["absentDate"];
+			if(typeof dateArray == 'undefined'){
+				return resolve();
+			}
+			var dateIndex = dateArray.indexOf(absentDate);
+			if(dateIndex < 0){
+				return resolve();
+			}
+			else{
+				dateArray.splice(dateIndex, 1);
+			}
+
+			//write to student table
+			DB_api.write(TABLE_NAME, studentObj).then(() => {
+				resolve();
+			}).catch(err => {
+				console.log("cancel absent write error");
+				reject("ERR_FORBIDDEN");
+			});
+		}, err => {
+			console.log("cancel Absentee catch");
 			reject("ERR_NOTFOUND");
 		});
 
@@ -373,7 +449,7 @@ function route_data(app){
 	userAPI.route('/course/attendtion').post((req, res) => {
 		apiResponse(addAbsentee(req.body), res);
 	}).delete((req, res) => {
-		console.log("delete student absent course ");
+		apiResponse(cancelAbsentee(req.body), res);
 	});
 
 	app.use('/data/student', userAPI);
