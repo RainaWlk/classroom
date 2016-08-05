@@ -283,6 +283,72 @@ function leaveCourse(body){
 	});
 }
 
+function addAbsentee(body){
+	console.log(body);
+		
+	return new Promise((resolve, reject) => {
+		//check
+		if(typeof body["date"] != 'string'){
+			return reject("ERR_FORBIDDEN");
+		}
+		
+		//find student obj
+		var getKey = {
+			"name": body["name"]
+		};
+		var result1 = getData(getKey);
+
+		//find course obj
+		var courseKey = {
+			"name": body["courseName"]
+		}
+		var result2 = course.getCourse(courseKey);
+
+		Promise.all([result1, result2]).then(dataArray => {
+			var studentData = dataArray[0];
+			var courseData = dataArray[1];
+			var index = null;
+
+			var searchExisted = function(obj, key){
+				var found = null;
+
+				for(let i in obj){
+					if( obj[i]["name"] == key){
+						found = i;
+						break;
+					}
+				}
+				return found;
+			};
+
+			//check student has attended the course
+			var studentObj = Data.makeObj(Data.Student, studentData);
+			var index = searchExisted(studentObj["course"], courseData["name"]);
+			if(index == null){
+				return reject("ERR_NOTFOUND");
+			}
+			var dateArray = studentObj["course"][index]["date"];
+			if(dateArray.indexOf(body["date"]) >= 0){
+				return resolve();
+			}
+			else{
+				dateArray.push(body["date"]);
+			}
+
+			//write to student table
+			DB_api.write(TABLE_NAME, studentObj).then(() => {
+				resolve();
+			}).catch(err => {
+				reject("ERR_FORBIDDEN");
+			});
+		}, err => {
+			console.log("addAbsentee catch");
+			reject("ERR_NOTFOUND");
+		});
+
+	});
+}
+
 //============= routing =====================
 function route_data(app){
 	let userAPI = express.Router();
@@ -302,6 +368,12 @@ function route_data(app){
 		
 	}).put((req, res) => {
 		apiResponse(attendCourse(req.body), res);
+	});
+	
+	userAPI.route('/course/attendtion').post((req, res) => {
+		apiResponse(addAbsentee(req.body), res);
+	}).delete((req, res) => {
+		console.log("delete student absent course ");
 	});
 
 	app.use('/data/student', userAPI);
